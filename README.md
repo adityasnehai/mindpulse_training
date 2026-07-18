@@ -1,5 +1,20 @@
 # MindPulse
 
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?logo=pytorch&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?logo=kotlin&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-4285F4?logo=jetpackcompose&logoColor=white)
+![Android](https://img.shields.io/badge/Android-3DDC84?logo=android&logoColor=white)
+![TensorFlow Lite](https://img.shields.io/badge/TensorFlow%20Lite-FF6F00?logo=tensorflow&logoColor=white)
+
+<p align="center">
+  <img src="screenshots/01_welcome.png" width="180" alt="Welcome screen" />
+  <img src="screenshots/04_stable_home.png" width="180" alt="Stable home / dashboard" />
+  <img src="screenshots/05_change_detected.png" width="180" alt="Change detected" />
+  <img src="screenshots/07_intervention.png" width="180" alt="Intervention" />
+  <img src="screenshots/08_weekly_summary.png" width="180" alt="Weekly summary" />
+</p>
+
 A privacy-first Android application that combines smartphone behavioural
 sensing, personalized temporal modelling, and a fine-tuned on-device
 language model to detect sustained routine changes and offer
