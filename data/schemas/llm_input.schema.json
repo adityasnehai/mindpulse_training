@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mindpulse/schemas/llm_input.schema.json",
+  "title": "MindPulse LLM Input",
+  "description": "Structured evidence passed to the on-device LLM. Never contains raw events, package names, check-in history, participant identity, or survey scores.",
+  "type": "object",
+  "required": ["goal", "changes", "user_context", "available_time_minutes", "candidate_actions"],
+  "additionalProperties": false,
+  "properties": {
+    "goal": {
+      "type": "string",
+      "enum": ["consistent_sleep", "balanced_phone_use", "daily_activity", "stress_management"]
+    },
+    "changes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["feature", "direction", "magnitude", "duration_days"],
+        "additionalProperties": false,
+        "properties": {
+          "feature": {
+            "type": "string",
+            "enum": [
+              "stationary_fraction", "walking_fraction", "running_fraction",
+              "long_lock_total_minutes", "longest_long_lock_minutes", "long_lock_session_count",
+              "long_charge_total_minutes", "longest_long_charge_minutes", "long_charge_session_count",
+              "night_charge_overlap_minutes"
+            ]
+          },
+          "direction": { "type": "string", "enum": ["increase", "decrease"] },
+          "magnitude": { "type": "string", "enum": ["small", "moderate", "large"] },
+          "duration_days": { "type": "integer", "minimum": 3, "maximum": 8 }
+        }
+      }
+    },
+    "user_context": {
+      "type": "string",
+      "enum": [
+        "work_or_study_pressure", "poor_sleep", "travel_or_schedule_change",
+        "physical_illness", "emotionally_low", "nothing_is_wrong", "other"
+      ]
+    },
+    "available_time_minutes": { "type": "integer", "enum": [1, 2, 5] },
+    "previous_helpful_actions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "previous_unhelpful_actions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "candidate_actions": {
+      "type": "array",
+      "description": "Top-N approved action IDs (pre-ranked by the local action scorer). The LLM must choose one of these.",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": { "type": "string" }
+    }
+  }
+}

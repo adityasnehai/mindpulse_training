@@ -1,0 +1,172 @@
+# MindPulse LLM configuration.
+# Starting values per docs/PRODUCT_SPEC.md sections 11-14 — not guaranteed
+# optimal; to be tuned against the validation split before final training.
+
+seed: 42
+
+paths:
+  raw_dir: "../../data/raw/dialogue"
+  processed_dir: "../../data/processed/llm"
+  artifacts_dir: "artifacts"
+
+datasets:
+  empathetic_dialogues:
+    source_url: "https://dl.fbaipublicfiles.com/parlai/empatheticdialogues/empatheticdialogues.tar.gz"
+    license: "CC BY-NC 4.0 (non-commercial)"
+  esconv:
+    source_url: "https://raw.githubusercontent.com/thu-coai/Emotional-Support-Conversation/main/ESConv.json"
+    license: "academic research use only"
+
+sft_dataset:
+  target_size_min: 4000
+  target_size_max: 6000
+  composition:
+    product_scenarios: 0.70
+    empathetic_dialogues: 0.15
+    esconv: 0.15
+  split:
+    train: 0.80
+    validation: 0.10
+    test: 0.10
+
+scenario_generation:
+  goals:
+    - consistent_sleep
+    - balanced_phone_use
+    - daily_activity
+    - stress_management
+  duration_days_range: [3, 8]
+  changed_feature_group_counts: [1, 2, 3]
+  contexts:
+    - work_or_study_pressure
+    - poor_sleep
+    - travel_or_schedule_change
+    - physical_illness
+    - emotionally_low
+    - nothing_is_wrong
+    - other
+  available_minutes_options: [1, 2, 5]
+  feedback_states:
+    - previously_helpful
+    - previously_unhelpful
+    - no_prior_feedback
+
+action_library:
+  - id: one_minute_breathing
+    allowed_goals: [stress_management]
+    allowed_contexts: [work_or_study_pressure, emotionally_low, physical_illness]
+    duration_minutes: 1
+    steps:
+      - "Breathe in slowly for four counts."
+      - "Hold for four counts, then breathe out for four counts."
+    contraindications: []
+  - id: two_minute_shutdown
+    allowed_goals: [consistent_sleep, balanced_phone_use, stress_management]
+    allowed_contexts: [work_or_study_pressure, poor_sleep]
+    duration_minutes: 2
+    steps:
+      - "Write down tomorrow's most important task."
+      - "Close the apps you no longer need."
+      - "Put the phone away until the timer ends."
+    contraindications: []
+  - id: five_minute_walk
+    allowed_goals: [daily_activity, stress_management]
+    allowed_contexts: [work_or_study_pressure, emotionally_low, nothing_is_wrong, other]
+    duration_minutes: 5
+    steps:
+      - "Stand up and stretch briefly."
+      - "Walk somewhere nearby, indoors or outdoors."
+      - "Notice three things you see or hear on the way."
+    contraindications: [physical_illness]
+  - id: one_task_planning
+    allowed_goals: [consistent_sleep, stress_management, balanced_phone_use]
+    allowed_contexts: [work_or_study_pressure, travel_or_schedule_change, other]
+    duration_minutes: 2
+    steps:
+      - "Write down one task that matters tomorrow."
+      - "Choose the smallest first step."
+      - "Put the note somewhere visible."
+    contraindications: []
+  - id: phone_out_of_reach
+    allowed_goals: [balanced_phone_use, consistent_sleep]
+    allowed_contexts: [poor_sleep, nothing_is_wrong]
+    duration_minutes: 1
+    steps:
+      - "Place your phone somewhere out of arm's reach."
+      - "Notice what you'd like to do instead for a moment."
+    contraindications: []
+  - id: short_grounding
+    allowed_goals: [stress_management]
+    allowed_contexts: [emotionally_low, work_or_study_pressure, physical_illness]
+    duration_minutes: 1
+    steps:
+      - "Name one thing you can see, hear, and feel right now."
+      - "Take one slow breath."
+    contraindications: []
+  - id: prepare_sleep_environment
+    allowed_goals: [consistent_sleep]
+    allowed_contexts: [poor_sleep, travel_or_schedule_change]
+    duration_minutes: 5
+    steps:
+      - "Dim the lights in the room."
+      - "Set your phone to do-not-disturb."
+      - "Lay out what you need for tomorrow morning."
+    contraindications: []
+  - id: drink_water_and_pause
+    allowed_goals: [daily_activity, stress_management]
+    allowed_contexts: [physical_illness, work_or_study_pressure, nothing_is_wrong]
+    duration_minutes: 1
+    steps:
+      - "Get a glass of water and drink it slowly."
+      - "Sit for a moment before returning to what you were doing."
+    contraindications: []
+  - id: stretch_break
+    allowed_goals: [daily_activity, stress_management]
+    allowed_contexts: [work_or_study_pressure, nothing_is_wrong, other]
+    duration_minutes: 2
+    steps:
+      - "Stand and stretch your arms overhead."
+      - "Roll your shoulders back a few times."
+    contraindications: [physical_illness]
+  - id: message_someone_you_trust
+    allowed_goals: [stress_management]
+    allowed_contexts: [emotionally_low, travel_or_schedule_change]
+    duration_minutes: 2
+    steps:
+      - "Think of one person you trust."
+      - "Send them a short message about how your day is going."
+    contraindications: []
+
+training:
+  base_model: "google/gemma-3-270m-it"
+  max_sequence_length: 512
+  training_method: lora
+  lora_rank: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  learning_rate: 0.0002
+  epochs: 3
+  # Reduced from the spec's starting per_device_batch_size=4/grad_accum=8:
+  # batch=4 with this model's real 262,144-token vocab produced a genuine
+  # CUDA OOM (logits tensor alone is batch*seq_len*vocab_size — 4*512*262144
+  # elements — before any gradient/optimizer memory), confirmed on the real
+  # RTX 4060 (8.19GB). batch=1 was already validated working in the smoke
+  # test; gradient_accumulation_steps raised to keep the same effective
+  # batch size of 32.
+  per_device_batch_size: 1
+  gradient_accumulation_steps: 32
+  warmup_ratio: 0.05
+  weight_decay: 0.01
+  logging_steps: 10
+  evaluation_strategy: steps
+  save_strategy: steps
+  load_best_model_at_end: true
+  seed: 42
+  candidate_lora_target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj

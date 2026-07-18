@@ -1,0 +1,119 @@
+# MindPulse behaviour-model configuration.
+# Starting values per docs/PRODUCT_SPEC.md section 8.3 — not guaranteed optimal;
+# to be tuned via GroupKFold(participant_id) before Leave-One-Participant-Out final eval.
+
+seed: 42
+
+paths:
+  raw_dir: "../../data/raw/studentlife"
+  interim_dir: "../../data/interim"
+  processed_dir: "../../data/processed/behaviour"
+  artifacts_dir: "artifacts"
+
+dataset:
+  source_url: "https://studentlife.cs.dartmouth.edu/dataset/dataset.tar.bz2"
+  timezone: "America/New_York"
+  files:
+    user_info: "dataset/user_info.csv"
+    activity_dir: "dataset/sensing/activity"
+    phonelock_dir: "dataset/sensing/phonelock"
+    phonecharge_dir: "dataset/sensing/phonecharge"
+    ema_definition: "dataset/EMA/EMA_definition.json"
+    ema_stress_dir: "dataset/EMA/response/Stress"
+    ema_mood_dir: "dataset/EMA/response/Mood"
+    ema_sleep_dir: "dataset/EMA/response/Sleep"
+    ema_activity_dir: "dataset/EMA/response/Activity"
+  optional_eval_files:
+    perceived_stress: "dataset/survey/PerceivedStressScale.csv"
+    phq9: "dataset/survey/PHQ-9.csv"
+    psqi: "dataset/survey/psqi.csv"
+  excluded_dirs:
+    - "audio"
+    - "conversation"
+    - "gps"
+    - "wifi"
+    - "wifi_location"
+    - "bluetooth"
+    - "dark"
+    - "education"
+    - "grades"
+
+features:
+  window_days: 7
+  feature_count: 12
+  input_channels: 24 # 12 feature values + 12 missingness indicators
+  long_interval_threshold_minutes: 60
+  night_window: ["00:00", "06:00"]
+  names:
+    - stationary_fraction
+    - walking_fraction
+    - running_fraction
+    - unknown_activity_fraction
+    - activity_coverage_fraction
+    - long_lock_total_minutes
+    - longest_long_lock_minutes
+    - long_lock_session_count
+    - long_charge_total_minutes
+    - longest_long_charge_minutes
+    - long_charge_session_count
+    - night_charge_overlap_minutes
+
+model:
+  embedding_size: 8
+  encoder:
+    conv1:
+      filters: 32
+      kernel_size: 3
+      padding: causal
+      dilation_rate: 1
+      activation: relu
+    conv2:
+      filters: 16
+      kernel_size: 3
+      padding: causal
+      dilation_rate: 2
+      activation: relu
+    dense_units: 16
+    dense_activation: relu
+    embedding_activation: linear
+  decoder:
+    dense_units_multiplier: 12 # 7 * 12
+
+training:
+  batch_size: 32
+  epochs: 150
+  learning_rate: 0.001
+  optimizer: adam
+  early_stopping_patience: 15
+  reduce_lr_patience: 7
+  minimum_learning_rate: 0.00001
+  loss: masked_mse
+
+splitting:
+  development:
+    method: GroupKFold
+    group: participant_id
+    folds: 5
+  final_evaluation:
+    method: LeaveOneParticipantOut
+    baseline_days: 14
+
+baseline:
+  min_valid_days_trend: 7
+  min_valid_days_alerts: 14
+  epsilon: 0.001
+
+alert_logic:
+  min_baseline_days: 14
+  min_feature_coverage: 0.6
+  drift_percentile_threshold: 0.95
+  min_persistence_days: 3
+  min_feature_groups: 2
+  cooldown_days: 7
+  feature_groups:
+    activity: ["stationary_fraction", "walking_fraction", "running_fraction"]
+    inactive_routine: ["long_lock_total_minutes", "longest_long_lock_minutes", "long_lock_session_count"]
+    charging_routine: ["long_charge_total_minutes", "longest_long_charge_minutes", "night_charge_overlap_minutes"]
+
+quantization:
+  min_alert_agreement: 0.99

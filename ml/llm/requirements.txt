@@ -1,0 +1,24 @@
+# Milestone 5-6: dataset building + LoRA fine-tuning. Install these in the
+# TRAINING venv only.
+#
+# Do NOT install litert-torch/ai-edge-torch into this venv — confirmed by a
+# real incident: doing so pulled in `torchao`, which is incompatible with
+# torch<2.11 and cascaded into breaking `transformers`' import of
+# BloomPreTrainedModel (peft references it at import time), silently
+# poisoning the whole training environment after the fact. Conversion
+# (Milestone 7) needs its own separate venv — see requirements-convert.txt —
+# specifically because it needs a different, incompatible torch version.
+requests>=2.31
+pyyaml>=6.0
+jsonschema>=4.22
+tqdm>=4.66
+pandas>=2.2
+scikit-learn>=1.4
+pytest>=8.0
+torch>=2.4,<2.11  # CUDA build installed separately per README; pin avoids litert-torch's stricter range colliding later
+transformers==5.13.1
+peft==0.19.1
+trl
+accelerate
+huggingface_hub
+datasets

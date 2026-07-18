@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mindpulse/schemas/daily_features.schema.json",
+  "title": "MindPulse Daily Feature Row",
+  "description": "One local calendar day (00:00:00-23:59:59, America/New_York for StudentLife-derived training data) of behavioural features, matched between StudentLife and Android sources.",
+  "type": "object",
+  "required": [
+    "participant_id",
+    "date",
+    "features",
+    "missing",
+    "coverage",
+    "feature_version"
+  ],
+  "properties": {
+    "participant_id": {
+      "type": "string",
+      "description": "StudentLife participant id (u00-u59 style) or Android device-local pseudonymous id. Never a real identity."
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Local calendar date, ISO-8601 (YYYY-MM-DD)."
+    },
+    "features": {
+      "type": "object",
+      "description": "The 12 matched feature values. NaN/absent when unavailable; presence tracked separately in `missing`.",
+      "required": [
+        "stationary_fraction",
+        "walking_fraction",
+        "running_fraction",
+        "unknown_activity_fraction",
+        "activity_coverage_fraction",
+        "long_lock_total_minutes",
+        "longest_long_lock_minutes",
+        "long_lock_session_count",
+        "long_charge_total_minutes",
+        "longest_long_charge_minutes",
+        "long_charge_session_count",
+        "night_charge_overlap_minutes"
+      ],
+      "properties": {
+        "stationary_fraction": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "walking_fraction": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "running_fraction": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "unknown_activity_fraction": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "activity_coverage_fraction": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "long_lock_total_minutes": { "type": ["number", "null"], "minimum": 0, "maximum": 1440 },
+        "longest_long_lock_minutes": { "type": ["number", "null"], "minimum": 0, "maximum": 1440 },
+        "long_lock_session_count": { "type": ["integer", "null"], "minimum": 0 },
+        "long_charge_total_minutes": { "type": ["number", "null"], "minimum": 0, "maximum": 1440 },
+        "longest_long_charge_minutes": { "type": ["number", "null"], "minimum": 0, "maximum": 1440 },
+        "long_charge_session_count": { "type": ["integer", "null"], "minimum": 0 },
+        "night_charge_overlap_minutes": { "type": ["number", "null"], "minimum": 0, "maximum": 360 }
+      }
+    },
+    "missing": {
+      "type": "object",
+      "description": "Boolean missingness indicator per feature, same 12 keys as `features`. true = value could not be computed for this day.",
+      "additionalProperties": { "type": "boolean" }
+    },
+    "coverage": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Fraction of the day with valid sensor observations."
+    },
+    "feature_version": {
+      "type": "string",
+      "description": "Version tag of the feature-extraction code that produced this row."
+    }
+  }
+}

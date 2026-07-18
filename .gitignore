@@ -1,0 +1,37 @@
+.venv/
+.venv-wsl/
+.venv_convert/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+data/raw/
+data/interim/
+data/processed/
+
+ml/behaviour/artifacts/
+ml/llm/artifacts/
+
+*.tflite
+*.litertlm
+*.safetensors
+*.bin
+*.gguf
+
+.DS_Store
+*.log
+
+android/**/build/
+android/.gradle/
+android/local.properties
+
+# Reference / portfolio-narrative docs and design exploration files —
+# kept locally, not pushed to this code repo.
+docs/*.md
+docs/*.txt
+*.fig
+*.zip
+scratch_solus_check/
+scratch_zip_check/
+stitch_export/
+*.pdf

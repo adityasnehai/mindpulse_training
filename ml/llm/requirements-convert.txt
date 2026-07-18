@@ -1,0 +1,11 @@
+# Milestone 7: LiteRT-LM conversion only. Install in a SEPARATE venv from
+# requirements.txt (see docs/LLM_MODEL_CARD.md for why — litert-torch's
+# version range and its runtime check together require torch>=2.11,<2.13,
+# which conflicts with the training venv's torch build).
+torch==2.12.1
+litert-torch==0.9.1
+litert-lm
+transformers
+peft
+accelerate
+pyyaml
